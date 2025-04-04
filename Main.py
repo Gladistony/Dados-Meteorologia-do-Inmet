@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Configurações
 PASTA_ZIP = './dados'
-ARQUIVO_DB = 'clima_brasilia.db'
+ARQUIVO_DB = 'clima.db'
 
 # SQLAlchemy setup
 Base = declarative_base()
