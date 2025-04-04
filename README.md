@@ -82,15 +82,29 @@ O script cria automaticamente duas tabelas:
 
 ### 🔸 dados_meteorologicos
 
-| Campo                       | Tipo     |
-|----------------------------|----------|
-| id                         | Integer (PK) |
-| estacao_id                 | ForeignKey -> estacao.id |
-| data                       | Date     |
-| hora                       | Time     |
-| precipitacao_total_mm      | Decimal  |
-| pressao_nivel_estacao_mB  | Decimal  |
-| ...                        | ... (demais variáveis meteorológicas) |
+| Campo                                       | Tipo       |
+|--------------------------------------------|------------|
+| id                                         | Integer (PK) |
+| estacao_id                                 | ForeignKey -> estacao.id |
+| data                                       | Date       |
+| hora                                       | Time       |
+| precipitacao_total_mm                      | Decimal    |
+| pressao_nivel_estacao_mB                  | Decimal    |
+| pressao_max_na_hora_ant_mB                | Decimal    |
+| pressao_min_na_hora_ant_mB                | Decimal    |
+| radiacao_global_KJ_m2                      | Decimal    |
+| temperatura_bulbo_seco_C                  | Decimal    |
+| temperatura_orvalho_C                     | Decimal    |
+| temperatura_max_na_hora_ant_C             | Decimal    |
+| temperatura_min_na_hora_ant_C             | Decimal    |
+| temperatura_orvalho_max_hora_ant_C        | Decimal    |
+| temperatura_orvalho_min_hora_ant_C        | Decimal    |
+| umidade_relativa_max_hora_ant_percent     | Decimal    |
+| umidade_relativa_min_hora_ant_percent     | Decimal    |
+| umidade_relativa_percent                  | Decimal    |
+| vento_direcao_graus                        | Decimal    |
+| vento_rajada_max_m_s                      | Decimal    |
+| vento_velocidade_m_s                      | Decimal    |
 
 ---
 
