@@ -1,12 +1,15 @@
 import os
+import zipfile
+import tempfile
 import glob
 import pandas as pd
+from tqdm import tqdm
 from sqlalchemy import create_engine, Column, Integer, String, Date, Time, DECIMAL, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime
 
 # Configurações
-PASTA_CSV = './dados'
+PASTA_ZIP = './dados'
 ARQUIVO_DB = 'clima_brasilia.db'
 
 # SQLAlchemy setup
@@ -17,7 +20,6 @@ Session = sessionmaker(bind=engine)
 # Modelos
 class Estacao(Base):
     __tablename__ = 'estacao'
-
     id = Column(Integer, primary_key=True)
     regiao = Column(String)
     uf = Column(String(2))
@@ -27,13 +29,10 @@ class Estacao(Base):
     longitude = Column(DECIMAL(10, 8))
     altitude = Column(DECIMAL(10, 2))
     data_fundacao = Column(Date)
-
     dados = relationship("DadoMeteorologico", back_populates="estacao")
-
 
 class DadoMeteorologico(Base):
     __tablename__ = 'dados_meteorologicos'
-
     id = Column(Integer, primary_key=True)
     estacao_id = Column(Integer, ForeignKey('estacao.id'))
     data = Column(Date)
@@ -55,14 +54,12 @@ class DadoMeteorologico(Base):
     vento_direcao_graus = Column(DECIMAL(10, 2))
     vento_rajada_max_ms = Column(DECIMAL(10, 2))
     vento_velocidade_ms = Column(DECIMAL(10, 2))
-
     estacao = relationship("Estacao", back_populates="dados")
 
-
-# Criar as tabelas no banco de dados
+# Criar tabelas no banco
 Base.metadata.create_all(engine)
 
-# Função para converter valores
+# Funções auxiliares
 def parse_valor(val):
     try:
         v = float(str(val).replace(",", "."))
@@ -70,14 +67,11 @@ def parse_valor(val):
     except:
         return None
 
-# Processamento do CSV
-def processar_arquivo_csv(caminho):
+def processar_csv(caminho):
     with open(caminho, 'r', encoding='latin-1') as f:
         linhas = f.readlines()
 
-    print(f"\n📄 Processando arquivo: {os.path.basename(caminho)}")
-
-    # Extração dos metadados pelas posições
+    # Metadados (por posição)
     try:
         regiao = linhas[0].split(";")[1].strip()
         uf = linhas[1].split(";")[1].strip()
@@ -89,7 +83,7 @@ def processar_arquivo_csv(caminho):
         data_fundacao_str = linhas[7].split(";")[1].strip()
         data_fundacao = datetime.strptime(data_fundacao_str, "%Y-%m-%d").date()
     except Exception as e:
-        print(f"Erro ao ler metadados: {e}")
+        print(f"Erro ao ler metadados em {os.path.basename(caminho)}: {e}")
         return
 
     estacao = Estacao(
@@ -103,12 +97,14 @@ def processar_arquivo_csv(caminho):
         data_fundacao=data_fundacao
     )
 
-    # Carregar dados a partir da linha 9
-    df = pd.read_csv(caminho, sep=";", skiprows=8, header=None, encoding='latin-1')
+    try:
+        df = pd.read_csv(caminho, sep=";", skiprows=9, header=None, encoding='latin-1')
+    except Exception as e:
+        print(f"Erro ao ler dados CSV: {e}")
+        return
 
     session = Session()
 
-    # Verificar se estação já existe
     existente = session.query(Estacao).filter_by(
         nome_estacao=estacao.nome_estacao,
         codigo_wmo=estacao.codigo_wmo
@@ -152,13 +148,22 @@ def processar_arquivo_csv(caminho):
 
     session.commit()
     session.close()
-    print(f"✅ Arquivo '{os.path.basename(caminho)}' importado com sucesso.")
 
-# Rodar para todos os arquivos na pasta
-csv_files = glob.glob(os.path.join(PASTA_CSV, "*.csv"))
+# Processar todos os zips da pasta
+zip_files = glob.glob(os.path.join(PASTA_ZIP, "*.zip"))
 
-if not csv_files:
-    print(f"❌ Nenhum arquivo encontrado na pasta: {PASTA_CSV}")
+if not zip_files:
+    print("❌ Nenhum arquivo ZIP encontrado na pasta 'dados'")
 else:
-    for arquivo in csv_files:
-        processar_arquivo_csv(arquivo)
+    print(f"🔍 {len(zip_files)} arquivo(s) ZIP encontrado(s). Processando...\n")
+
+    for zip_file in tqdm(zip_files, desc="ZIPs", unit="arquivo"):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with zipfile.ZipFile(zip_file, 'r') as z:
+                z.extractall(tmpdir)
+                arquivos_csv = glob.glob(os.path.join(tmpdir, '**/*.csv'), recursive=True)
+
+                for csv_path in tqdm(arquivos_csv, desc=f"{os.path.basename(zip_file)}", leave=False, unit="csv"):
+                    processar_csv(csv_path)
+
+    print("\n✅ Importação finalizada!")
