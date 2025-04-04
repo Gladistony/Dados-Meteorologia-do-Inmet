@@ -24,8 +24,8 @@ pip install sqlalchemy pandas tqdm
 ```
 .
 ├── Main.py                  # Script principal que processa os dados
-├── clima_brasilia.db       # Banco de dados SQLite gerado automaticamente
-├── dados/                  # Pasta onde você deve colocar os arquivos .zip do INMET
+├── clima.db                 # Banco de dados SQLite gerado automaticamente
+├── dados/                   # Pasta onde você deve colocar os arquivos .zip do INMET
 │   ├── 2000.zip
 │   ├── 2001.zip
 │   └── ...
