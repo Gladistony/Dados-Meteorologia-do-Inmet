@@ -81,7 +81,11 @@ def processar_csv(caminho):
         longitude = parse_valor(linhas[5].split(";")[1].strip())
         altitude = parse_valor(linhas[6].split(";")[1].strip())
         data_fundacao_str = linhas[7].split(";")[1].strip()
-        data_fundacao = datetime.strptime(data_fundacao_str, "%Y-%m-%d").date()
+        #Verificar se a data_fundacao_str tem - ou /
+        if "-" in data_fundacao_str:
+            data_fundacao = datetime.strptime(data_fundacao_str, "%Y-%m-%d").date()
+        else:
+            data_fundacao = datetime.strptime(data_fundacao_str, "%d/%m/%y").date()
     except Exception as e:
         print(f"Erro ao ler metadados em {os.path.basename(caminho)}: {e}")
         return
@@ -119,10 +123,20 @@ def processar_csv(caminho):
 
     for _, row in df.iterrows():
         try:
+            if "/" in str(row.iloc[0]):
+                dt = datetime.strptime(row.iloc[0], "%Y/%m/%d").date()
+            else:
+                dt = datetime.strptime(row.iloc[0], "%Y-%m-%d").date()
+            
+            if "UTC" in str(row.iloc[1]):
+                hr = row.iloc[1].split(" ")[0]
+                hr = datetime.strptime(hr, "%H%M").time()
+            else:
+                hr = datetime.strptime(row.iloc[1], "%H:%M").time()
             dado = DadoMeteorologico(
                 estacao_id=estacao_id,
-                data=datetime.strptime(row.iloc[0], "%Y-%m-%d").date(),
-                hora=datetime.strptime(row.iloc[1], "%H:%M").time(),
+                data=dt,
+                hora=hr,
                 precipitacao_total_mm=parse_valor(row.iloc[2]),
                 pressao_nivel_estacao_mB=parse_valor(row.iloc[3]),
                 pressao_max_ant_mB=parse_valor(row.iloc[4]),
