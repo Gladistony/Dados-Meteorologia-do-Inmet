@@ -57,7 +57,7 @@ Durante a execução, o script irá:
 - Ler todos os arquivos `.zip` na pasta `./dados`
 - Extrair os `.csv` de cada ano
 - Processar os metadados da estação
-- Armazenar os dados meteorológicos no banco SQLite (`clima_brasilia.db`)
+- Armazenar os dados meteorológicos no banco SQLite (`clima.db`)
 - Mostrar uma barra de progresso para cada `.zip` e seus respectivos `.csv`
 
 ---
